@@ -8,19 +8,19 @@ extension String: Parameter {
     }
 }
 
-extension SignedIntegerType {
+extension SignedInteger {
     public var asString: String {
         return "\(self)"
     }
 }
 
-extension FloatingPointType {
+extension FloatingPoint {
     public var asString: String {
         return "\(self)"
     }
 }
 
-extension BooleanType {
+extension Boolean {
     public var asString: String {
         return "\(self)"
     }

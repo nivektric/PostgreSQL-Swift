@@ -5,13 +5,13 @@ import Darwin
 #endif
 
 func floatFromInt32(input: Int32) -> Float {
-    let array = byteArrayFrom(input)
-    return typeFromByteArray(array, Float.self)
+    let array = byteArrayFrom(value: input)
+    return typeFromByteArray(byteArray: array, Float.self)
 }
 
 func doubleFromInt64(input: Int64) -> Double {
-    let array = byteArrayFrom(input)
-    return typeFromByteArray(array, Double.self)
+    let array = byteArrayFrom(value: input)
+    return typeFromByteArray(byteArray: array, Double.self)
 }
 
 func byteArrayFrom<T>(value: T) -> [UInt8] {
@@ -23,6 +23,6 @@ func byteArrayFrom<T>(value: T) -> [UInt8] {
 
 func typeFromByteArray<T>(byteArray: [UInt8], _: T.Type) -> T {
     return byteArray.withUnsafeBufferPointer {
-        return UnsafePointer<T>($0.baseAddress).memory
+        return UnsafePointer<T>($0.baseAddress!).pointee
     }
 }

@@ -3,9 +3,9 @@ import libpq
 /// Results are lazily evaluated, i.e. you cannot close the connection used the execute the query,
 /// and start asking questions you haven't previously asked.
 public final class QueryResult {
-    let resultPointer: COpaquePointer
+    let resultPointer: OpaquePointer
 
-    init(resultPointer: COpaquePointer) {
+    init(resultPointer: OpaquePointer) {
         self.resultPointer = resultPointer
     }
 
@@ -19,7 +19,7 @@ public final class QueryResult {
         rows.reserveCapacity(Int(self.numberOfRows))
 
         for rowIndex in 0..<self.numberOfRows {
-            rows.append(self.readResultRowAtIndex(rowIndex))
+            rows.append(self.readResultRowAtIndex(rowIndex: rowIndex))
         }
 
         return rows
@@ -55,7 +55,7 @@ public final class QueryResult {
         var columnIndexesForNames = [String: Int]()
 
         for columnNumber in 0..<self.numberOfColumns {
-            let name = String.fromCString(PQfname(self.resultPointer, columnNumber))!
+            let name = String(cString: PQfname(self.resultPointer, columnNumber))
             columnIndexesForNames[name] = Int(columnNumber)
         }
 
@@ -67,7 +67,7 @@ public final class QueryResult {
         values.reserveCapacity(Int(self.numberOfColumns))
 
         for columnIndex in 0..<self.numberOfColumns {
-            values.append(readColumnValueAtIndex(columnIndex, rowIndex: rowIndex))
+            values.append(readColumnValueAtIndex(columnIndex: columnIndex, rowIndex: rowIndex))
         }
 
         return QueryResultRow(columnValues: values, queryResult: self)
@@ -81,17 +81,17 @@ public final class QueryResult {
         guard let type = self.typesForColumnIndexes[Int(columnIndex)] else {
             let length = Int(PQgetlength(self.resultPointer, rowIndex, columnIndex))
             // Unsupported column types are returned as [UInt8]
-            return byteArrayForPointer(UnsafePointer<UInt8>(startingPointer), length: length)
+            return byteArrayForPointer(start: UnsafePointer<UInt8>(startingPointer), length: length)
         }
 
         switch type {
-        case .Boolean: return UnsafePointer<Bool>(startingPointer).memory
-        case .Int16: return Int16(bigEndian: UnsafePointer<Int16>(startingPointer).memory)
-        case .Int32: return Int32(bigEndian: UnsafePointer<Int32>(startingPointer).memory)
-        case .Int64: return Int64(bigEndian: UnsafePointer<Int64>(startingPointer).memory)
-        case .SingleFloat: return floatFromInt32(Int32(bigEndian: UnsafePointer<Int32>(startingPointer).memory))
-        case .DoubleFloat: return doubleFromInt64(Int64(bigEndian: UnsafePointer<Int64>(startingPointer).memory))
-        case .Text: return String.fromCString(startingPointer)!
+        case .Boolean: return UnsafePointer<Bool>(startingPointer).pointee
+        case .Int16: return Int16(bigEndian: UnsafePointer<Int16>(startingPointer).pointee)
+        case .Int32: return Int32(bigEndian: UnsafePointer<Int32>(startingPointer).pointee)
+        case .Int64: return Int64(bigEndian: UnsafePointer<Int64>(startingPointer).pointee)
+        case .SingleFloat: return floatFromInt32(input: Int32(bigEndian: UnsafePointer<Int32>(startingPointer).pointee))
+        case .DoubleFloat: return doubleFromInt64(input: Int64(bigEndian: UnsafePointer<Int64>(startingPointer).pointee))
+        case .Text: return String(cString: startingPointer)
         }
     }
 

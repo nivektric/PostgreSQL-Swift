@@ -12,12 +12,12 @@ public struct ConnectionParameters {
     public let user: String
     public let password: String
 
-    public init(host: String = String.fromCString(getenv("PGHOST")) ?? "",
-        port: String = String.fromCString(getenv("PGPORT")) ?? "",
-        options: String = String.fromCString(getenv("PGOPTIONS")) ?? "",
-        databaseName: String = String.fromCString(getenv("PGDATABASE")) ?? "",
-        user: String = String.fromCString(getenv("PGUSER")) ?? "",
-        password: String = String.fromCString(getenv("PGPASSWORD")) ?? "") {
+    public init(host: String = String(cString: getenv("PGHOST")),
+        port: String = String(cString: getenv("PGPORT")),
+        options: String = String(cString: getenv("PGOPTIONS")),
+        databaseName: String = String(cString: getenv("PGDATABASE")),
+        user: String = String(cString: getenv("PGUSER")),
+        password: String = String(cString: getenv("PGPASSWORD"))) {
             self.host = host
             self.port = port
             self.options = options

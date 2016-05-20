@@ -9,24 +9,25 @@ public class OpenConnection {
     ///
     /// First parameter is referred to as `$1` in the query.
     public func execute(query: String, parameters: [Parameter] = []) throws -> QueryResult {
-        let values = UnsafeMutablePointer<UnsafePointer<Int8>>.alloc(parameters.count)
+        let values = UnsafeMutablePointer<UnsafePointer<Int8>>(allocatingCapacity: parameters.count)
 
         defer {
-            values.destroy()
-            values.dealloc(parameters.count)
+            values.deinitialize()
+            values.deallocateCapacity(parameters.count)
         }
 
         var temps = [Array<UInt8>]()
-        for (i, value) in parameters.enumerate() {
+        for (i, value) in parameters.enumerated() {
             temps.append(Array<UInt8>(value.asString.utf8) + [0])
             values[i] = UnsafePointer<Int8>(temps.last!)
         }
 
+        let immutable: UnsafePointer<UnsafePointer<Int8>?> = UnsafePointer<UnsafePointer<Int8>?>(values)
         let resultPointer = PQexecParams(connectionPointer,
                                          query,
                                          Int32(parameters.count),
                                          nil,
-                                         values,
+                                         immutable,
                                          nil,
                                          nil,
                                          QueryDataFormat.Binary.rawValue)
@@ -36,7 +37,7 @@ public class OpenConnection {
         switch status {
         case PGRES_COMMAND_OK, PGRES_TUPLES_OK: break
         default:
-            let message = String.fromCString(PQresultErrorMessage(resultPointer)) ?? "Unknown error"
+            let message = String(cString: PQresultErrorMessage(resultPointer)) ?? "Unknown error"
             throw ConnectionError.InvalidQuery(message: message)
         }
 
@@ -45,7 +46,7 @@ public class OpenConnection {
 
     // MARK: Internal and private
 
-    private var connectionPointer: COpaquePointer
+    private var connectionPointer: OpaquePointer
 
     init(parameters: ConnectionParameters = ConnectionParameters()) throws {
         connectionPointer = PQsetdbLogin(parameters.host,
@@ -57,7 +58,7 @@ public class OpenConnection {
                                          parameters.password)
 
         guard PQstatus(connectionPointer) == CONNECTION_OK else {
-            let message = String.fromCString(PQerrorMessage(connectionPointer))
+            let message = String(cString: PQerrorMessage(connectionPointer))
             throw ConnectionError.ConnectionFailed(message: message ?? "Unknown error")
         }
     }
@@ -72,7 +73,7 @@ public class OpenConnection {
     }
 }
 
-public enum ConnectionError: ErrorType {
+public enum ConnectionError: ErrorProtocol {
     case ConnectionFailed(message: String)
     case InvalidQuery(message: String)
 }

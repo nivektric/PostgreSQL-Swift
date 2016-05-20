@@ -10,7 +10,7 @@ let package = Package(
   name: "PostgreSQL",
   dependencies: [
     .Package(url: libpqUrl, majorVersion: 9),
-    .Package(url: "https://github.com/Zewo/CLibvenice.git", majorVersion: 0),
-    .Package(url: "https://github.com/Zewo/Venice.git", majorVersion: 0),
+    .Package(url: "https://github.com/VeniceX/CLibvenice.git", majorVersion: 0),
+    .Package(url: "https://github.com/VeniceX/Venice.git", majorVersion: 0),
   ]
 )
